@@ -1,6 +1,6 @@
-from ugc.models.user import User
-from ugc.models.group import Group
-from ugc.models.queue import Queue
+from backend.models.user import User
+from backend.models.group import Group
+from backend.models.queue import Queue
 from datetime import datetime, timedelta
 
 
@@ -9,13 +9,26 @@ def get_input_name_text():
 
 
 def get_main_text(user: User):
+    groups = user.groups.all().order_by('name')
+    if groups:
+        s = ""
+        for i in range(len(groups)):
+            s += f"{i+1}) {groups[i].name}\n"
+    else:
+        s = " - групп нет\n"
     return f"ГЛАВНОЕ МЕНЮ\n" \
            f"\n" \
            f"Ваше имя - \"{user.display_name}\"\n" \
            f"\n" \
-           f"1. Изменить имя\n" \
-           f"2. Присоединиться к группе\n" \
-           f"3. Создать группу"
+           f"Ваши группы:\n" \
+           f"\n" \
+           f"{s}" \
+           f"\n" \
+           f"Х - Перейти в группу №X из списка\n" \
+           f"удалить Х - Удалить группу №Х из списка\n" \
+           f"изменить - Изменить имя\n" \
+           f"присоединиться - Присоединиться к группе\n" \
+           f"создать - Создать группу"
 
 
 def get_group_text(user: User, group: Group):
@@ -36,21 +49,22 @@ def get_group_text(user: User, group: Group):
             elif queues[i].date == (datetime.now() + timedelta(days=2)).date():
                 s += " (послезавтра)\n"
             else:
-                s += "\n"
+                s += f"\n"
     if cnt == 0:
         s = " - очередей нет\n"
     admin_text = ""
     if group.admin == user:
-        admin_text = "удалить X - удалить очередь X\n"
+        admin_text = "удалить X - удалить очередь №X\n"
     return f"Группа \"{group.name}\"\n" \
            f"\n" \
-           f"Доступные очереди (введите номер чтобы перейти):\n" \
+           f"Доступные очереди:\n" \
            f"\n" \
            f"{s}" \
            f"\n" \
+           f"X - перейти в очередь №X\n" \
+           f"{admin_text}" \
            f"создать - Создать очередь\n" \
            f"обновить - Обновить это меню\n" \
-           f"{admin_text}" \
            f"выход - Выйти из группы"
 
 
@@ -84,5 +98,6 @@ def get_queue_text(queue: Queue):
            f"{s}" \
            f"\n" \
            f"записаться - Записаться в очередь\n" \
+           f"выписаться - Выписаться из очереди\n" \
            f"обновить - Обновить очередь\n" \
            f"выход - Вернуться в меню группы"

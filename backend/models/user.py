@@ -18,35 +18,19 @@ class User(models.Model):
         default="???",
         blank=True,
     )
-    group = models.ForeignKey(
+    cur_group = models.ForeignKey(
         'Group',
-        verbose_name="Группа",
+        verbose_name="Текушая группа",
         on_delete=models.SET_NULL,
-        related_name="users",
-        null=True,
-        blank=True,
-    )
-    tmp_group = models.ForeignKey(
-        'Group',
-        verbose_name="Текушая очередь",
-        on_delete=models.SET_NULL,
-        related_name="tmp_users0",
-        null=True,
-        blank=True,
-    )
-    tmp_queue = models.ForeignKey(
-        'Queue',
-        verbose_name="Текушая очередь",
-        on_delete=models.SET_NULL,
-        related_name="tmp_users",
+        related_name="cur_users",
         null=True,
         blank=True,
     )
     cur_queue = models.ForeignKey(
         'Queue',
-        verbose_name="Текущая очередь",
+        verbose_name="Текушая очередь",
         on_delete=models.SET_NULL,
-        related_name="tmp_users2",
+        related_name="cur_users",
         null=True,
         blank=True,
     )

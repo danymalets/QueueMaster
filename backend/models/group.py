@@ -15,6 +15,12 @@ class Group(models.Model):
         related_name="administered_group",
         null=True,
     )
+    users = models.ManyToManyField(
+        'User',
+        verbose_name="Участники группы",
+        related_name="groups",
+        blank=True,
+    )
 
     def __str__(self):
         return self.name

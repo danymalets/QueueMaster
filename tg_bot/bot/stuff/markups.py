@@ -4,9 +4,9 @@ empty_markup = types.ReplyKeyboardRemove()
 
 main_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
 main_markup.add(
-    types.KeyboardButton(text="1"),
-    types.KeyboardButton(text="2"),
-    types.KeyboardButton(text="3")
+    types.KeyboardButton(text="изменить"),
+    types.KeyboardButton(text="присоединиться"),
+    types.KeyboardButton(text="создать")
 )
 
 group_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
@@ -24,6 +24,7 @@ queue_creating_markup.add(
 queue_markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
 queue_markup.add(
     types.KeyboardButton(text="записаться"),
+    types.KeyboardButton(text="выписаться"),
     types.KeyboardButton(text="обновить"),
     types.KeyboardButton(text="выход"),
 )
