@@ -4,8 +4,10 @@ from backend.models.state import State
 from backend.models.user import User
 from backend.models.group import Group
 from backend.models.queue import Queue
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time as tm
 import re
+import time
+from threading import Thread
 
 
 def on_message(bot: TeleBot, text: str, name: str, chat_id: int):
@@ -136,16 +138,16 @@ def on_message(bot: TeleBot, text: str, name: str, chat_id: int):
                 name = queue_match.group(1)
                 date_str = queue_match.group(2)
                 try:
-                    date = datetime.strptime(date_str, "%d.%m.%Y").date()
-                    if date < datetime.now().date():
+                    q_date = datetime.strptime(date_str, "%d.%m.%Y").date()
+                    if q_date < datetime.now().date():
                         bot.send_message(chat_id, f"Ошибка ввода. Эта дата уже прошла")
-                    elif date > (datetime.now() + timedelta(days=100)).date():
+                    elif q_date > (datetime.now() + timedelta(days=100)).date():
                         bot.send_message(chat_id, f"Ошибка ввода. Пока рано "
                                                   f"создавать очередь на эту дату.")
                     else:
                         queue = Queue(
                             name=name,
-                            date=date,
+                            date=q_date,
                             group=user.cur_group,
                         )
                         queue.save()
@@ -157,6 +159,19 @@ def on_message(bot: TeleBot, text: str, name: str, chat_id: int):
                             if user != other:
                                 bot.send_message(other.chat_id, f"Только что в группе \"{queue.group.name}\" "
                                                                 f"была создана очередь \"{queue.name}\"")
+
+                        def notification():
+                            d = datetime.combine(q_date, tm(8, 30, 0))-datetime.now()
+                            seconds = d.total_seconds()
+                            if seconds < 1:
+                                return
+                            time.sleep(seconds)
+                            for n_user in queue.users.all():
+                                bot.send_message(n_user.chat_id, f"Сегодня в группе \"{queue.group.name}\" "
+                                                                 f"будет очередь \"{queue.name}\". Вы записаны.")
+
+                        t = Thread(target=notification)
+                        t.start()
                 except ValueError:
                     bot.send_message(chat_id, f"Ошибка ввода. Не удалось расспознать дату")
             else:
