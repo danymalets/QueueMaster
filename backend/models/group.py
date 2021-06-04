@@ -1,0 +1,24 @@
+from django.db import models
+from .state import State
+
+
+class Group(models.Model):
+    name = models.CharField(
+        verbose_name="Имя группы",
+        max_length=100,
+        null=True
+    )
+    admin = models.ForeignKey(
+        'User',
+        verbose_name="Админ",
+        on_delete=models.SET_NULL,
+        related_name="administered_group",
+        null=True,
+    )
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = "Группа"
+        verbose_name_plural = "Группы"
