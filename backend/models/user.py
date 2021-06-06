@@ -38,6 +38,7 @@ class User(models.Model):
         verbose_name="Текущее состояние чата",
         default=State.INPUT_NAME,
         choices=[
+            (State.NOT_REGISTERED, "Не зарегистрирован"),
             (State.INPUT_NAME, "Ввод имени"),
             (State.MAIN, "Главное меню"),
             (State.GROUP_CREATING, "Создание группы"),
