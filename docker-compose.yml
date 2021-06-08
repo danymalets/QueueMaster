@@ -6,11 +6,12 @@ services:
     volumes:
       - ./data/db:/var/lib/postgresql/data
     environment:
+      - POSTGRES_HOST_AUTH_METHOD=trust
       - POSTGRES_DB=postgres
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-  web:
-    build: .
+  tgbot:
+    build: danymalets/tgbot:1.0
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - .:/code
