@@ -10,8 +10,7 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
   webserver:
-  #image: danymalets/webserver:1.1
-    build: webserver
+    image: danymalets/webserver:2.0
     command: bash -c "
       sleep 10 &&
       python manage.py makemigrations &&
@@ -22,8 +21,7 @@ services:
     depends_on:
       - db
   tgbot:
-    #image: danymalets/tgbot:1.0
-    build: tgbot
+    image: danymalets/tgbot:2.0
     command: bash -c "
       sleep 10 &&
       python main.py"
