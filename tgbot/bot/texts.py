@@ -8,8 +8,6 @@ def get_input_name_text():
 
 def get_main_text(user):
     groups = user['groups']
-    print("g")
-    print(groups)
     if groups:
         s = ""
         for i in range(len(groups)):
@@ -37,6 +35,9 @@ def get_group_text(user, group):
     for i in range(len(queues)):
         queue = DataProvider.get_queue(queues[i])
         s += f"{i + 1}) {queue['name']}-{queue['date'].strftime('%d.%m.%Y')}"
+        print("tttt")
+        print(queue['date'])
+        print(datetime.now().date)
         if queue['date'] == datetime.now().date():
             s += " (сегодня)\n"
         elif queue['date'] == (datetime.now() + timedelta(days=1)).date():
@@ -71,7 +72,7 @@ def get_queue_create_text():
            f"или\n" \
            f"[название предмета][номер подгруппы]-[дата ДД.ММ.ГГГГ]\n" \
            f"\n" \
-           f"(сегодня {datetime.now().strftime('%d.%m.%Y')})\n" \
+           f"Для справки: сегодня - {datetime.now().strftime('%d.%m.%Y')}\n" \
            f"\n" \
            f"Например:\n" \
            f"исп-31.12.2021\n" \
@@ -81,12 +82,13 @@ def get_queue_create_text():
 
 
 def get_queue_text(queue):
-    users = queue['users']
+    users = [(queue['nums'][i], queue['users'][i]) for i in range(len(queue['nums']))]
+    users.sort()
     if users:
         s = ""
         for i in range(len(users)):
-            user = DataProvider.get_user(users[i])
-            s += f"{i+1}) {user['display_name']} @{user['name']}\n"
+            user = DataProvider.get_user(users[i][1])
+            s += f"{users[i][0]}) {user['display_name']}\n"
     else:
         s = " - очередь пуста\n"
     return f"Очередь \"{queue['name']}-{queue['date'].strftime('%d.%m.%Y')}\"\n" \
@@ -94,6 +96,7 @@ def get_queue_text(queue):
            f"\n" \
            f"{s}" \
            f"\n" \
+           f"X - Занять определённое место в очереди (1-30)\n" \
            f"записаться - Записаться в очередь\n" \
            f"выписаться - Выписаться из очереди\n" \
            f"обновить - Обновить очередь\n" \

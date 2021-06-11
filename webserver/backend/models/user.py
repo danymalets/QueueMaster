@@ -35,7 +35,7 @@ class User(models.Model):
     )
     state = models.IntegerField(
         verbose_name="Текущее состояние чата",
-        default=1,
+        default=0,
         choices=[
             (0, "Не зарегистрирован"),
             (1, "Ввод имени"),

@@ -27,9 +27,6 @@ class GetOrCreateUser(generics.CreateAPIView):
 class SaveUser(generics.CreateAPIView):
     def post(self, request, *args, **kwargs):
         data = request.data
-        print("posting")
-        print(data)
-        print(data['chat_id'])
         user = User.objects.get(chat_id=int(data['chat_id']))
         user.name = data['name']
         user.state = data['state']
@@ -66,7 +63,7 @@ class GetGroupByName(generics.CreateAPIView):
                 'admin': group.admin.chat_id,
                 'name': group.name,
                 'queues': [queue.id for queue in group.queues.all()],
-                'users': [user.id for user in group.users.all()],
+                'users': [user.chat_id for user in group.users.all()],
             })
         except Group.DoesNotExist:
             return JsonResponse({
@@ -77,13 +74,13 @@ class GetGroupByName(generics.CreateAPIView):
 class SaveGroup(generics.CreateAPIView):
     def post(self, request, *args, **kwargs):
         data = request.data
-        group, created = User.objects.get(id=data['id'])
+        group = Group.objects.get(id=data['id'])
         group.name = data['name']
-        group.admin = User.object.get(chat_id=data['admin'])
+        group.admin = User.objects.get(chat_id=data['admin'])
         group.name = data['name']
-        group.queues.clear()
+        group.users.clear()
         for chat_id in data['users']:
-            group.users.add(User.obects.get(chat_id=chat_id))
+            group.users.add(User.objects.get(chat_id=chat_id))
         group.save()
         return HttpResponse('')
 
@@ -109,6 +106,7 @@ class GetQueue(generics.CreateAPIView):
             'name': queue.name,
             'date': queue.date,
             'group': queue.group.id,
+            'nums': eval(queue.nums),
             'users': [user.chat_id for user in queue.users.all()],
             'cur_users': [user.chat_id for user in queue.cur_users.all()],
         })
@@ -116,7 +114,6 @@ class GetQueue(generics.CreateAPIView):
 
 class GetQueueByName(generics.CreateAPIView):
     def get(self, request, name, date, group):
-        print("getqueue")
         try:
             queue = Queue.objects.get(name=name,
                                       date=datetime.strptime(date, "%Y-%m-%d"),
@@ -127,6 +124,7 @@ class GetQueueByName(generics.CreateAPIView):
                 'name': queue.name,
                 'date': queue.date,
                 'group': queue.group.id if queue.group else None,
+                'nums': eval(queue.nums),
                 'users': [user.chat_id for user in queue.users.all()],
                 'cur_users': [user.chat_id for user in queue.cur_users.all()],
             })
@@ -139,7 +137,6 @@ class GetQueueByName(generics.CreateAPIView):
 class SaveQueue(generics.CreateAPIView):
     def post(self, request, *args, **kwargs):
         data = request.data
-        print(int(data['id']))
         queue = Queue.objects.get(id=int(data['id']))
         queue.name = data['name']
         queue.date = datetime.strptime(data['date'], "%Y-%m-%d")
@@ -147,6 +144,7 @@ class SaveQueue(generics.CreateAPIView):
         queue.users.clear()
         for chat_id in data['users']:
             queue.users.add(User.objects.get(chat_id=chat_id))
+        queue.nums = str(data['nums'])
         queue.save()
         return HttpResponse('')
 
@@ -157,9 +155,8 @@ class CreateQueue(generics.CreateAPIView):
         queue = Queue(
             name=data['name'],
             date=datetime.strptime(data['date'], "%Y-%m-%d"),
-            group=Group.objects.get(id=data['group'])
+            group=Group.objects.get(id=data['group']),
+            nums=str([])
         )
-        print("666")
-        print(queue.group)
         queue.save()
         return HttpResponse('')

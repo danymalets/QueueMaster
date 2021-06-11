@@ -14,14 +14,9 @@ def on_message(bot: TeleBot, text: str, name: str, chat_id: int):
     user = DataProvider.get_user(chat_id)
     user['name'] = name
 
-    print("----")
-    print(user)
-
     if user['state'] == State.NOT_REGISTERED or text == "/start":
-        print("sending mess")
         bot.send_message(chat_id, f"Бот запущен. Добро пожаловать!\n\n{texts.get_input_name_text()}",
                          reply_markup=markups.empty_markup)
-        print("sending mess 2")
         user['state'] = State.INPUT_NAME
     elif user['state'] == State.INPUT_NAME:
         if len(text) > 32:
@@ -46,9 +41,8 @@ def on_message(bot: TeleBot, text: str, name: str, chat_id: int):
             group['users'].remove(chat_id)
             DataProvider.post_group(group)
             bot.send_message(chat_id, "Успешно удалено", reply_markup=markups.group_markup)
-            bot.send_message(chat_id, texts.get_main_text(user), reply_markup=markups.main_markup)
+            bot.send_message(chat_id, texts.get_main_text(DataProvider.get_user(chat_id)), reply_markup=markups.main_markup)
         elif text == "изменить":
-            print("???????????))))")
             bot.send_message(chat_id, texts.get_input_name_text(),
                              reply_markup=markups.empty_markup)
             user['state'] = State.INPUT_NAME
@@ -71,6 +65,8 @@ def on_message(bot: TeleBot, text: str, name: str, chat_id: int):
             if group['exists']:
                 bot.send_message(chat_id, f"Вы были успешно присоеденены к группе")
                 bot.send_message(chat_id, texts.get_group_text(user, group), reply_markup=markups.group_markup)
+                group['users'].append(chat_id)
+                DataProvider.post_group(group)
                 user['cur_group'] = group['id']
                 user['state'] = State.GROUP
             else:
@@ -169,14 +165,15 @@ def on_message(bot: TeleBot, text: str, name: str, chat_id: int):
                             bot.send_message(chat_id, texts.get_group_text(user, DataProvider.get_group(user['cur_group'])),
                                              reply_markup=markups.group_markup)
                             user['state'] = State.GROUP
-                            for other_chat_id in DataProvider.get_group(user['cur_group'])['users']:
+                            cur_group = DataProvider.get_group(user['cur_group'])
+                            for other_chat_id in cur_group['users']:
                                 if chat_id != other_chat_id:
                                     other = DataProvider.get_user(other_chat_id)
-                                    bot.send_message(other['chat_id'], f"Только что в группе \"{user['cur_group']}\" "
+                                    bot.send_message(other['chat_id'], f"Только что в группе \"{cur_group['name']}\" "
                                                                        f"была создана очередь \"{name}\"")
 
                             def notification():
-                                d = datetime.combine(q_date, tm(10, 10, 0))-datetime.now()
+                                d = datetime.combine(q_date, tm(8, 55, 0))-datetime.now()
                                 seconds = d.total_seconds()
                                 if seconds < 1:
                                     return
@@ -193,16 +190,41 @@ def on_message(bot: TeleBot, text: str, name: str, chat_id: int):
                 bot.send_message(chat_id, f"Ошибка ввода")
     elif user['state'] == State.QUEUE:
         text = text.lower()
-        if text == "записаться":
+        if text.isdigit():
+            queue = DataProvider.get_queue(user['cur_queue'])
+            ind = int(text)
+            if ind < 1 or ind > 30:
+                bot.send_message(chat_id, f"Невозможно занять это место")
+            elif chat_id in queue['users']:
+                bot.send_message(chat_id, f"Вы и так записаны в эту очередь. Чтобы изменить место, для начала"
+                                          f" выпишитесь из очереди")
+            elif ind in queue['nums']:
+                bot.send_message(chat_id, f"Это место уже занято")
+            else:
+                queue['nums'].append(ind)
+                queue['users'].append(chat_id)
+                DataProvider.post_queue(queue)
+                bot.send_message(chat_id, f"Готово!")
+                bot.send_message(chat_id, texts.get_queue_text(DataProvider.get_queue(user['cur_queue'])),
+                                 reply_markup=markups.queue_markup)
+        elif text == "записаться":
             queue = DataProvider.get_queue(user['cur_queue'])
             if chat_id in queue['users']:
                 bot.send_message(chat_id, f"Вы уже записаны в эту очередь")
             else:
-                for chat_id in queue['cur_users']:
-                    other = DataProvider.get_user(chat_id)
-                    if other['state'] == State.QUEUE:
-                        bot.send_message(other['chat_id'], f"{other['display_name']} @{other['name']}"
-                                                           f" записался в эту очередь")
+                users = [(queue['nums'][i], queue['users'][i]) for i in range(len(queue['nums']))]
+                users.sort()
+                ind = 1
+                for other_ind, _ in users:
+                    if other_ind == ind:
+                        ind += 1
+                for other_chat_id in queue['cur_users']:
+                    other = DataProvider.get_user(other_chat_id)
+                    if other['state'] == State.QUEUE and other_chat_id != chat_id:
+                        bot.send_message(other['chat_id'], f"{user['display_name']} @{user['name']}"
+                                                           f" записался(лась) в эту очередь под "
+                                                           f"номером {ind}")
+                queue['nums'].append(ind)
                 queue['users'].append(chat_id)
                 DataProvider.post_queue(queue)
                 bot.send_message(chat_id, f"Готово!")
@@ -213,7 +235,9 @@ def on_message(bot: TeleBot, text: str, name: str, chat_id: int):
             if chat_id not in queue['users']:
                 bot.send_message(chat_id, f"Вас и так нету в этой очереди")
             else:
-                queue['users'].remove(chat_id)
+                i = queue['users'].index(chat_id)
+                queue['users'].pop(i)
+                queue['nums'].pop(i)
                 DataProvider.post_queue(queue)
                 bot.send_message(chat_id, f"Готово!")
                 bot.send_message(chat_id, texts.get_queue_text(DataProvider.get_queue(user['cur_queue'])),
@@ -228,5 +252,4 @@ def on_message(bot: TeleBot, text: str, name: str, chat_id: int):
         else:
             bot.send_message(chat_id, "Ошибка ввода")
 
-    print(user)
     DataProvider.post_user(user)

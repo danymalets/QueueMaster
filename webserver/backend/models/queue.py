@@ -18,6 +18,11 @@ class Queue(models.Model):
         related_name="queues",
         null=True,
     )
+    nums = models.CharField(
+        verbose_name="Номера в очереди",
+        max_length=150,
+        default="[]",
+    )
     users = models.ManyToManyField(
         'User',
         verbose_name="Участники очереди",

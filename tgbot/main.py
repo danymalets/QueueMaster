@@ -9,13 +9,10 @@ bot = telebot.TeleBot(TOKEN, threaded=False)
 
 @bot.message_handler(content_types=["text"])
 def message_came(message):
-    print("start")
-    # try:
-    on_message(bot, message.text, message.chat.username, message.chat.id)
-    # except Exception as e:
-    #     print(e)
-    #     raise Exception
-    print("end")
+    if message.chat.username:
+        on_message(bot, message.text, message.chat.username, message.chat.id)
+    else:
+        on_message(bot, message.text, f"id{str(message.chat.id)}", message.chat.id)
 
 
 if __name__ == '__main__':

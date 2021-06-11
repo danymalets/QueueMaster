@@ -10,7 +10,7 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
   webserver:
-#    image: danymalets/bot:1.0
+  #image: danymalets/webserver:1.1
     build: webserver
     command: bash -c "
       sleep 10 &&
@@ -22,7 +22,7 @@ services:
     depends_on:
       - db
   tgbot:
-    #    image: danymalets/bot:1.0
+    #image: danymalets/tgbot:1.0
     build: tgbot
     command: bash -c "
       sleep 10 &&
